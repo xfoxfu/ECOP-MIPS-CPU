@@ -21,10 +21,6 @@ module Memory #(parameter AW = 32,
     (* ram_style = "block" *) reg [BW-1:0] data[0:SIZE-1];
     
     initial begin
-        // generate genvar i;
-        // for(integer i = 0; i <= SIZE-1; i = i + 1)
-        //     data[i] <= 0;
-            // endgenerate
         $display("read from %s", FILE);
         $readmemh(FILE, data);
     end
