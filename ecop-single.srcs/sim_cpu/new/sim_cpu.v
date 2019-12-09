@@ -24,7 +24,7 @@ module sim_cpu();
     CPU cpu(.Clk(Clk), .Reset(Reset), .Pc(Pc), .NextPc(NextPc), .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal));
 
     always @(posedge Clk) begin
-        if (Pc == NextPc)
+        if (Pc == NextPc) 
             $stop;
     end
     
