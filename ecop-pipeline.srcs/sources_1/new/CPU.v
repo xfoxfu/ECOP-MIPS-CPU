@@ -27,16 +27,20 @@ module CPU(input Clk,
     wire [31:0] next_pc; // written by pcmux
     reg [27:0] if_jaddr;
     reg [31:0] if_immed_ext;
-    reg if_pcSrc;
+    reg [2:0] if_pcSrc;
+    reg if_zf;
+    reg if_jr;
 
     always @(negedge Clk) begin
-        if_jaddr <= jaddr;
-        if_immed_ext <= immed_ext;
-        if_pcSrc <= pcSrc;
+        if_pcSrc <= ex_pcSrc;
+        if_zf <= zf;
+        if_jr <= rs_v;
+        if_jaddr <= ex_jaddr;
+        if_immed_ext <= ex_immed_ext;
     end
     
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
-    PCMux mod_mux_pc(.PC4(pc4), .J(if_jaddr), .B(if_immed_ext), .Sw(if_pcSrc), .NextPC(next_pc));
+    PCMux mod_mux_pc(.PC4(pc4), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
 
     ////////// ID stage //////////
 
@@ -73,7 +77,7 @@ module CPU(input Clk,
     wire regWr;
     wire regWDst;
     wire regWSrc;
-    wire [1:0] pcSrc;
+    wire [2:0] pcSrc;
     
     Control mod_ctrl(op, funct, id_zf, instMRw, aluOpA, aluOpB, extType, aluOp, memRw, regWr, regWDst, regWSrc, pcSrc);
 
@@ -90,10 +94,12 @@ module CPU(input Clk,
     reg ex_aluOpA;
     reg ex_aluOpB;
     reg [2:0] ex_aluOp;
-    reg ex_memRw; // pass
-    reg ex_regWSrc; // pass
-    reg ex_regWDst; // pass
-    reg ex_regWr; // pass
+    reg [2:0] ex_pcSrc; // pass IF
+    reg [27:0] ex_jaddr; // pass IF
+    reg ex_memRw; // pass MEM
+    reg ex_regWSrc; // pass WB
+    reg ex_regWDst; // pass WB
+    reg ex_regWr; // pass WB
     reg [31:0] ex_pc; // debug
 
     always @(negedge Clk) begin
@@ -105,10 +111,12 @@ module CPU(input Clk,
         ex_aluOpA <= aluOpA;
         ex_aluOpB <= aluOpB;
         ex_aluOp <= aluOp;
-        ex_memRw <= memRw; // pass
-        ex_regWSrc <= regWSrc; // pass
-        ex_regWDst <= regWDst; // pass
-        ex_regWr <= regWr; // pass
+        ex_pcSrc <= pcSrc; // pass IF
+        ex_jaddr <= jaddr; // pass IF
+        ex_memRw <= memRw; // pass MEM
+        ex_regWSrc <= regWSrc; // pass WB
+        ex_regWDst <= regWDst; // pass WB
+        ex_regWr <= regWr; // pass WB
         ex_pc <= id_pc; // debug
     end
     
@@ -118,7 +126,6 @@ module CPU(input Clk,
     wire [31:0] rt_v;
     wire defer_regWr;
     
-    // TODO: mux_rd_rt regWr mux_alu_mem regWDst
     RegStack mod_rs(.reset(Reset), .reg0(ex_rs), .reg1(ex_rt), .regw(mux_rd_rt), .wr(defer_regWr), .dataw(mux_alu_mem), .data0(rs_v), .data1(rt_v), .clk(Clk));
         
     wire [31:0] mux_reg_sa;
@@ -137,22 +144,22 @@ module CPU(input Clk,
     reg [31:0] mem_alu_res;
     reg [31:0] mem_rt_v;
     reg mem_memRw;
-    reg mem_regWSrc; // pass
-    reg mem_regWDst; // pass
-    reg mem_regWr; // pass
-    reg [4:0] mem_rd; // pass
-    reg [4:0] mem_rt; // pass
+    reg mem_regWSrc; // pass WB
+    reg mem_regWDst; // pass WB
+    reg mem_regWr; // pass WB
+    reg [4:0] mem_rd; // pass WB
+    reg [4:0] mem_rt; // pass WB
     reg [31:0] mem_pc; // debug
 
     always @(negedge Clk) begin
         mem_alu_res <= alu_res;
         mem_rt_v <= rt_v;
         mem_memRw <= ex_memRw;
-        mem_regWSrc <= ex_regWSrc; // pass
-        mem_regWDst <= ex_regWDst; // pass
-        mem_regWr <= ex_regWr; // pass
-        mem_rd <= ex_rd; // pass
-        mem_rt <= ex_rt; // pass
+        mem_regWSrc <= ex_regWSrc; // pass WB
+        mem_regWDst <= ex_regWDst; // pass WB
+        mem_regWr <= ex_regWr; // pass WB
+        mem_rd <= ex_rd; // pass WB
+        mem_rt <= ex_rt; // pass WB
         mem_pc <= ex_pc;
     end
     
