@@ -29,7 +29,8 @@ module CPU(input Clk,
     reg [31:0] if_immed_ext;
     reg [2:0] if_pcSrc;
     reg if_zf;
-    reg if_jr;
+    reg [31:0] if_jr;
+    reg if_clear;
 
     always @(negedge Clk) begin
         if_pcSrc <= ex_pcSrc;
@@ -37,6 +38,7 @@ module CPU(input Clk,
         if_jr <= rs_v;
         if_jaddr <= ex_jaddr;
         if_immed_ext <= ex_immed_ext;
+        if_clear <= next_pc != pc4;
     end
     
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
@@ -46,10 +48,12 @@ module CPU(input Clk,
 
     reg [31:0] id_pc;
     reg id_zf;
+    reg id_clear;
 
     always @(negedge Clk) begin
         id_pc <= pc;
         id_zf <= zf;
+        id_clear <= if_clear;
     end
 
     wire [31:0] inst;
@@ -65,7 +69,7 @@ module CPU(input Clk,
     wire [27:0] jaddr;
     wire [4:0]  sa;
     
-    Decoder mod_id(inst, op, funct, rs, rt, rd, immed, jaddr, sa);
+    Decoder mod_id(id_clear ? 0 : inst, op, funct, rs, rt, rd, immed, jaddr, sa);
     
     wire zf; // written by alu
     wire instMRw;
@@ -75,11 +79,13 @@ module CPU(input Clk,
     wire [2:0] aluOp;
     wire memRw;
     wire regWr;
-    wire regWDst;
-    wire regWSrc;
+    wire [1:0] regWDst;
+    wire [1:0] regWSrc;
     wire [2:0] pcSrc;
+    wire [1:0] regWrDep;
+    wire [1:0] memRot;
     
-    Control mod_ctrl(op, funct, id_zf, instMRw, aluOpA, aluOpB, extType, aluOp, memRw, regWr, regWDst, regWSrc, pcSrc);
+    Control mod_ctrl(op, funct, id_zf, instMRw, aluOpA, aluOpB, extType, aluOp, memRw, regWr, regWDst, regWSrc, pcSrc, regWrDep, memRot);
 
     wire [31:0] immed_ext;
     Ext mod_ext(.imm(immed), .sign(extType), .extv(immed_ext));
@@ -97,10 +103,12 @@ module CPU(input Clk,
     reg [2:0] ex_pcSrc; // pass IF
     reg [27:0] ex_jaddr; // pass IF
     reg ex_memRw; // pass MEM
-    reg ex_regWSrc; // pass WB
-    reg ex_regWDst; // pass WB
+    reg [1:0] ex_memRot; // pass MEM
+    reg [1:0] ex_regWSrc; // pass WB
+    reg [1:0] ex_regWDst; // pass WB
     reg ex_regWr; // pass WB
     reg [31:0] ex_pc; // debug
+    reg [1:0] ex_regWrDep; // pass WB
 
     always @(negedge Clk) begin
         ex_rs <= rs;
@@ -114,84 +122,110 @@ module CPU(input Clk,
         ex_pcSrc <= pcSrc; // pass IF
         ex_jaddr <= jaddr; // pass IF
         ex_memRw <= memRw; // pass MEM
+        ex_memRot <= memRot; // pass MEM
         ex_regWSrc <= regWSrc; // pass WB
         ex_regWDst <= regWDst; // pass WB
         ex_regWr <= regWr; // pass WB
         ex_pc <= id_pc; // debug
+        ex_regWrDep <= regWrDep; // pass WB
     end
     
-    wire [4:0]  mux_rd_rt;
-    wire [31:0] mux_alu_mem; // written by mux
+    wire [4:0]  mux_reg_dst;
+    wire [31:0] mux_reg_data; // written by mux
     wire [31:0] rs_v;
     wire [31:0] rt_v;
     wire defer_regWr;
     
-    RegStack mod_rs(.reset(Reset), .reg0(ex_rs), .reg1(ex_rt), .regw(mux_rd_rt), .wr(defer_regWr), .dataw(mux_alu_mem), .data0(rs_v), .data1(rt_v), .clk(Clk));
+    RegStack mod_rs(.reset(Reset), .reg0(ex_rs), .reg1(ex_rt), .regw(mux_reg_dst), .wr(defer_regWr), .dataw(mux_reg_data), .data0(rs_v), .data1(rt_v), .clk(Clk));
         
-    wire [31:0] mux_reg_sa;
-    wire [31:0] mux_rt_imm;
+    wire [31:0] mux_alu_opa;
+    wire [31:0] mux_alu_opb;
     
-    Mux2 mod_mux_reg_sa(.in0(rs_v), .in1({0, ex_sa}), .s(ex_aluOpA), .out(mux_reg_sa));
-    Mux2 mod_mux_rt_imm(.in0(rt_v), .in1(ex_immed_ext), .s(ex_aluOpB), .out(mux_rt_imm));
+    Mux2 mod_mux_alu_opa(.in0(rs_v), .in1({0, ex_sa}), .s(ex_aluOpA), .out(mux_alu_opa));
+    Mux2 mod_mux_alu_opb(.in0(rt_v), .in1(ex_immed_ext), .s(ex_aluOpB), .out(mux_alu_opb));
     
     wire [31:0] alu_res;
     wire sf;
+    wire of;
     
-    ALU mod_alu(.aluop(ex_aluOp), .lhs(mux_reg_sa), .rhs(mux_rt_imm), .result(alu_res), .zero(zf), .sign(sf));
+    ALU mod_alu(.aluop(ex_aluOp), .lhs(mux_alu_opa), .rhs(mux_alu_opb), .result(alu_res), .zero(zf), .sign(sf), .overflow(of));
 
     ////////// MEM Stage //////////
 
     reg [31:0] mem_alu_res;
     reg [31:0] mem_rt_v;
     reg mem_memRw;
-    reg mem_regWSrc; // pass WB
-    reg mem_regWDst; // pass WB
+    reg [1:0] mem_memRot;
+    reg [1:0] mem_regWSrc; // pass WB
+    reg [1:0] mem_regWDst; // pass WB
     reg mem_regWr; // pass WB
     reg [4:0] mem_rd; // pass WB
     reg [4:0] mem_rt; // pass WB
     reg [31:0] mem_pc; // debug
+    reg [1:0] mem_regWrDep; // pass WB
+    reg mem_of; // pass WB
 
     always @(negedge Clk) begin
         mem_alu_res <= alu_res;
         mem_rt_v <= rt_v;
         mem_memRw <= ex_memRw;
+        mem_memRot <= ex_memRot;
         mem_regWSrc <= ex_regWSrc; // pass WB
         mem_regWDst <= ex_regWDst; // pass WB
         mem_regWr <= ex_regWr; // pass WB
         mem_rd <= ex_rd; // pass WB
         mem_rt <= ex_rt; // pass WB
-        mem_pc <= ex_pc;
+        mem_pc <= ex_pc; // debug
+        mem_regWrDep <= ex_regWrDep; // pass WB
+        mem_of <= of; // pass WB
     end
     
+    wire [31:0] raw_mem_v;
     wire [31:0] mem_v;
     
-    Memory #(.FILE("data.mem")) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(mem_v));
+    Memory #(.FILE("data.mem")) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(raw_mem_v));
+    MemRotate mod_mem_rot(mem_memRot, raw_mem_v, mem_v);
 
     ////////// WB Stage //////////
 
     reg [31:0] wb_alu_res;
     reg [31:0] wb_mem_v;
-    reg wb_regWSrc;
-    reg wb_regWDst;
+    reg [31:0] wb_rt_v;
+    reg [1:0] wb_regWSrc;
+    reg [1:0] wb_regWDst;
     reg wb_regWr;
     reg [4:0] wb_rd;
     reg [4:0] wb_rt;
     reg [31:0] wb_pc; // debug
+    reg [1:0] wb_regWrDep;
+    reg wb_yield_regWr;
+    reg wb_of;
 
     always @(negedge Clk) begin
         wb_alu_res <= mem_alu_res;
         wb_mem_v <= mem_v;
+        wb_rt_v <= mem_rt_v;
         wb_regWSrc <= mem_regWSrc;
         wb_regWDst <= mem_regWDst;
         wb_regWr <= mem_regWr;
         wb_rd <= mem_rd;
         wb_rt <= mem_rt;
         wb_pc <= mem_pc;
+        wb_regWrDep <= mem_regWrDep;
+        wb_of <= mem_of;
+
+        case (wb_regWrDep)
+            2'b00: wb_yield_regWr <= mem_regWr;
+            2'b01: wb_yield_regWr <= mem_regWr && (mem_rt_v != 0);
+            2'b10: wb_yield_regWr <= mem_regWr && (mem_of != 1);
+            2'b11: wb_yield_regWr <= mem_regWr; // unused
+            default: wb_yield_regWr <= mem_regWr;
+        endcase
     end
 
-    assign defer_regWr = wb_regWr;
+    assign defer_regWr = wb_yield_regWr;
     
-    Mux2 #(5) mod_mux_rd_rt(.in0(wb_rd), .in1(wb_rt), .s(wb_regWDst), .out(mux_rd_rt));
-    Mux2 mod_mux_alu_mem(.in0(wb_alu_res), .in1(wb_mem_v), .s(wb_regWSrc), .out(mux_alu_mem));
+    Mux4 #(5) mod_mux_reg_dst(.in00(wb_rd), .in01(wb_rt), .in10(5'b11111), .in11(0), .s(wb_regWDst), .out(mux_reg_dst));
+    Mux4 mod_mux_reg_data(.in00(wb_alu_res), .in01(wb_mem_v), .in10(wb_pc+4), .in11(0), .s(wb_regWSrc), .out(mux_reg_data));
     
 endmodule

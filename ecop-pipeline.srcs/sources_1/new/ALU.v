@@ -6,7 +6,8 @@ module ALU #(parameter width = 32)
              rhs,
              result,
              zero,
-             sign);
+             sign,
+             overflow);
     
     input  [2 : 0]           aluop;
     input  [width-1 : 0]     lhs;
@@ -14,6 +15,7 @@ module ALU #(parameter width = 32)
     output reg [width-1 : 0] result;
     output reg               zero;
     output reg               sign;
+    output reg               overflow;
     
     always @(*)
     begin
@@ -29,6 +31,8 @@ module ALU #(parameter width = 32)
             3'b111 : result <= lhs ^ rhs;
             default : ;
         endcase
+
+        overflow <= (aluop == 3'b000) ? (lhs[31] == rhs[31] && result[31] != lhs[31]) : 0;
         
         zero = !result;
         sign = result[31];
