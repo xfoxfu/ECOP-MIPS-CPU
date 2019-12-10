@@ -24,13 +24,25 @@ module CPU(input Clk,
     
     wire [31:0] pc;
     wire [31:0] pc4;
-    reg [31:0] if_next_pc; // written by pcmux
+    wire [31:0] next_pc; // written by pcmux
+    wire [31:0] if_epc;
+    wire [27:0] if_jaddr;
+    reg [31:0] if_immed_ext;
+    reg [2:0] if_pcSrc;
+    reg if_zf;
+    reg [31:0] if_jr;
 
     always @(negedge Clk) begin
-        if_next_pc <= (^ex_pc !== 1'bX) ? next_pc : (pc+4);
+        // if_pc <= (^ex_pc !== 1'bX) ? ex_pc : pc;
+        if_pcSrc <= ex_pcSrc;
+        if_zf <= zf;
+        if_jr <= rs_v;
+        // if_jaddr <= ex_jaddr;
+        if_immed_ext <= ex_immed_ext;
     end
     
-    PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(if_next_pc));
+    PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
+    PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
 
     wire [31:0] inst;
     
@@ -144,15 +156,13 @@ module CPU(input Clk,
     Mux2 mod_mux_alu_opb(.in0(rt_v), .in1(ex_immed_ext), .s(ex_aluOpB), .out(mux_alu_opb));
     
     wire [31:0] alu_res;
-    // wire zf;
     wire sf;
     wire of;
     
     ALU mod_alu(.aluop(ex_aluOp), .lhs(mux_alu_opa), .rhs(mux_alu_opb), .result(alu_res), .zero(zf), .sign(sf), .overflow(of));
-    
-    wire [31:0] next_pc;
 
-    PCMux mod_mux_pc(.PC4(pc4), .EPC(ex_pc), .J(ex_jaddr), .B(ex_immed_ext), .Jr(rs_v), .Sw(ex_pcSrc), .Zf(zf), .NextPC(next_pc));
+    assign if_epc = ex_pc;
+    assign if_jaddr = ex_jaddr;
 
     ////////// MEM Stage //////////
 
