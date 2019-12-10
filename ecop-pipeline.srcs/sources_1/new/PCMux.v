@@ -11,7 +11,7 @@ module PCMux(input [31:0] PC4,
 always @(*) begin
     case (Sw)
         3'b000: NextPC <= PC4;
-        3'b001: NextPC <= PC4 + (B<<2);
+        3'b001: NextPC <= PC4 - 8 + (B<<2);
         3'b010: NextPC <= {PC4[31:28], J};
         3'b011: NextPC <= PC4 - 4;
         3'b100: NextPC <= Jr;

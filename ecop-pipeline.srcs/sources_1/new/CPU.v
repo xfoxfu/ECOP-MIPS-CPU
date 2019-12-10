@@ -25,40 +25,45 @@ module CPU(input Clk,
     wire [31:0] pc;
     wire [31:0] pc4;
     wire [31:0] next_pc; // written by pcmux
-    reg [27:0] if_jaddr;
+    wire [31:0] if_epc;
+    wire [27:0] if_jaddr;
     reg [31:0] if_immed_ext;
     reg [2:0] if_pcSrc;
     reg if_zf;
     reg [31:0] if_jr;
-    reg if_clear;
 
     always @(negedge Clk) begin
+        // if_pc <= (^ex_pc !== 1'bX) ? ex_pc : pc;
         if_pcSrc <= ex_pcSrc;
         if_zf <= zf;
         if_jr <= rs_v;
-        if_jaddr <= ex_jaddr;
+        // if_jaddr <= ex_jaddr;
         if_immed_ext <= ex_immed_ext;
-        if_clear <= next_pc != pc4;
     end
     
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
-    PCMux mod_mux_pc(.PC4(pc4), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
+    PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
+
+    wire [31:0] inst;
+    
+    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst));
 
     ////////// ID stage //////////
 
     reg [31:0] id_pc;
+    reg [31:0] id_inst;
     reg id_zf;
-    reg id_clear;
+
+    initial begin
+        id_pc <= 0;
+        id_inst <= 0;
+    end
 
     always @(negedge Clk) begin
         id_pc <= pc;
+        id_inst <= inst;
         id_zf <= zf;
-        id_clear <= if_clear;
     end
-
-    wire [31:0] inst;
-    
-    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(id_pc), .din(0), .dout(inst));
     
     wire [5:0]  op;
     wire [5:0]  funct;
@@ -69,7 +74,7 @@ module CPU(input Clk,
     wire [27:0] jaddr;
     wire [4:0]  sa;
     
-    Decoder mod_id(id_clear ? 0 : inst, op, funct, rs, rt, rd, immed, jaddr, sa);
+    Decoder mod_id(id_inst, op, funct, rs, rt, rd, immed, jaddr, sa);
     
     wire zf; // written by alu
     wire instMRw;
@@ -109,6 +114,12 @@ module CPU(input Clk,
     reg ex_regWr; // pass WB
     reg [31:0] ex_pc; // debug
     reg [1:0] ex_regWrDep; // pass WB
+
+    initial begin
+        ex_pc <= 0;
+        ex_memRw <= 0;
+        ex_regWr <= 0;
+    end
 
     always @(negedge Clk) begin
         ex_rs <= rs;
@@ -150,6 +161,9 @@ module CPU(input Clk,
     
     ALU mod_alu(.aluop(ex_aluOp), .lhs(mux_alu_opa), .rhs(mux_alu_opb), .result(alu_res), .zero(zf), .sign(sf), .overflow(of));
 
+    assign if_epc = ex_pc;
+    assign if_jaddr = ex_jaddr;
+
     ////////// MEM Stage //////////
 
     reg [31:0] mem_alu_res;
@@ -164,6 +178,12 @@ module CPU(input Clk,
     reg [31:0] mem_pc; // debug
     reg [1:0] mem_regWrDep; // pass WB
     reg mem_of; // pass WB
+
+    initial begin
+        mem_memRw <= 0;
+        mem_regWr <= 0;
+        mem_pc <= 0;
+    end
 
     always @(negedge Clk) begin
         mem_alu_res <= alu_res;
@@ -200,6 +220,11 @@ module CPU(input Clk,
     reg [1:0] wb_regWrDep;
     reg wb_yield_regWr;
     reg wb_of;
+
+    initial begin
+        wb_regWr <= 0;
+        wb_yield_regWr <= 0;
+    end
 
     always @(negedge Clk) begin
         wb_alu_res <= mem_alu_res;
