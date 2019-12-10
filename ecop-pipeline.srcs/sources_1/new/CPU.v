@@ -27,18 +27,18 @@ module CPU(input Clk,
     wire [31:0] next_pc; // written by pcmux
     wire [31:0] if_epc;
     wire [27:0] if_jaddr;
-    reg [31:0] if_immed_ext;
-    reg [2:0] if_pcSrc;
-    reg if_zf;
-    reg [31:0] if_jr;
+    wire [31:0] if_immed_ext;
+    wire [2:0] if_pcSrc;
+    wire if_zf;
+    wire [31:0] if_jr;
 
     always @(negedge Clk) begin
         // if_pc <= (^ex_pc !== 1'bX) ? ex_pc : pc;
-        if_pcSrc <= ex_pcSrc;
-        if_zf <= zf;
-        if_jr <= rs_v;
+        // if_pcSrc <= ex_pcSrc;
+        // if_zf <= zf;
+        // if_jr <= rs_v;
         // if_jaddr <= ex_jaddr;
-        if_immed_ext <= ex_immed_ext;
+        // if_immed_ext <= ex_immed_ext;
     end
     
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
@@ -163,6 +163,10 @@ module CPU(input Clk,
 
     assign if_epc = ex_pc;
     assign if_jaddr = ex_jaddr;
+    assign if_pcSrc = ex_pcSrc;
+    assign if_zf = zf;
+    assign if_jr = rs_v;
+    assign if_immed_ext = ex_immed_ext;
 
     ////////// MEM Stage //////////
 
@@ -203,7 +207,7 @@ module CPU(input Clk,
     wire [31:0] raw_mem_v;
     wire [31:0] mem_v;
     
-    Memory #(.FILE("data.mem")) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(raw_mem_v));
+    Memory #(.FILE("data.mem"), .SIZE(16)) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(raw_mem_v));
     MemRotate mod_mem_rot(mem_memRot, raw_mem_v, mem_v);
 
     ////////// WB Stage //////////
@@ -239,7 +243,7 @@ module CPU(input Clk,
         wb_regWrDep <= mem_regWrDep;
         wb_of <= mem_of;
 
-        case (wb_regWrDep)
+        case (mem_regWrDep)
             2'b00: wb_yield_regWr <= mem_regWr;
             2'b01: wb_yield_regWr <= mem_regWr && (mem_rt_v != 0);
             2'b10: wb_yield_regWr <= mem_regWr && (mem_of != 1);

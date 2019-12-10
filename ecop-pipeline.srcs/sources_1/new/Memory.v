@@ -3,7 +3,7 @@
 module Memory #(parameter AW = 32,
                 parameter DW = 32,
                 parameter FILE = "test.mem",
-                parameter SIZE = 256)
+                parameter SIZE = 512)
                (clk,
                 rw,
                 addr,
