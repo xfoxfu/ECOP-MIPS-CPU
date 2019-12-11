@@ -31,12 +31,10 @@ module CPU(input Clk,
     wire [2:0] if_pcSrc;
     wire if_zf;
     wire [31:0] if_jr;
+    wire clear;
 
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
-    PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
-
-    wire clear;
-    assign clear = next_pc != pc4;
+    PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc), .Branched(clear));
 
     wire [31:0] inst;
     wire [31:0] inst_peek;

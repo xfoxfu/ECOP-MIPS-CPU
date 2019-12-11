@@ -7,28 +7,53 @@ module PCMux(input [31:0] PC4,
              input [31:0] Jr,
              input [2:0] Sw,
              input Zf,
-             output reg [31:0] NextPC);
+             output reg [31:0] NextPC
+             output reg        Branched);
 
 always @(*) begin
     case (Sw)
-        3'b000: NextPC <= PC4;
-        3'b001: NextPC <= (EPC+4) + (B<<2);
-        3'b010: NextPC <= {EPC[31:28], J};
-        3'b011: NextPC <= EPC;
-        3'b100: NextPC <= Jr;
+        3'b000: begin
+            NextPC <= PC4;
+            Branched <= 0;
+        end
+        3'b001: begin
+            NextPC <= (EPC+4) + (B<<2);
+            Branched <= 1;
+        end
+        3'b010: begin
+            NextPC <= {EPC[31:28], J};
+            Branched <= 1;
+        end
+        3'b011: begin
+            NextPC <= EPC;
+            Branched <= 1;
+        end
+        3'b100: begin
+            NextPC <= Jr;
+            Branched <= 1;
+        end
         3'b101: begin
-            if (Zf == 0)
-                NextPC <= (EPC+4) + (B<<2);
-            else
-                NextPC <= PC4;
+            if (Zf == 0) begin
+                    NextPC <= (EPC+4) + (B<<2);
+                    Branched <= 1;
+            end else begin
+                    NextPC <= PC4;
+                    Branched <= 0;
+            end
         end
         3'b110: begin
-            if (Zf == 1)
-                NextPC <= (EPC+4) + (B<<2);
-            else
-                NextPC <= PC4;
+            if (Zf == 1) begin
+                    NextPC <= (EPC+4) + (B<<2);
+                    Branched <= 1;
+            end else begin
+                    NextPC <= PC4;
+                    Branched <= 0;
+            end
         end
-        default: NextPC <= PC4; // not used
+        default: begin
+            NextPC <= PC4; // not used
+            Branched <= 0;
+        end
     endcase
 end
 
