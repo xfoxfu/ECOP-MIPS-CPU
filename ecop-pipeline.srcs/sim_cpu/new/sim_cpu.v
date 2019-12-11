@@ -12,7 +12,6 @@ module sim_cpu();
     wire [31:0] RtVal;
     wire [31:0] AluVal;
     wire [31:0] MemVal;
-    wire [31:0] MemData;
     
 
     initial begin
@@ -22,11 +21,6 @@ module sim_cpu();
         forever #1 Clk <= ~Clk;
     end
     
-    CPU cpu(.Clk(Clk), .Reset(Reset), .Pc(Pc), .NextPc(NextPc), .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal), .MemData(MemData));
+    CPU cpu(.Clk(Clk), .Reset(Reset), .Pc(Pc), .NextPc(NextPc), .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal));
 
-    /* always @(posedge Clk) begin
-        if (Pc == NextPc) 
-            $stop;
-    end */
-    
 endmodule // sim_cpu
