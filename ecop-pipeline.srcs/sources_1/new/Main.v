@@ -23,8 +23,8 @@ ButtonStabilizer stab(.Clk(Clk), .PushButton(ClkBtn), .ButtonState(cpu_clk));
 CPU cpu(.Clk(cpu_clk), .Reset(Rst), .Pc(Pc), .NextPc(NextPc), 
     .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal));
 
-assign PcDisp = {2'b00, Pc[31:2]};
-assign NextPcDisp = {2'b00, NextPc[31:2]};
+assign PcDisp = Pc;
+assign NextPcDisp = NextPc;
 
 wire disp_clk;
 
@@ -67,7 +67,7 @@ always @(Sw, PcDisp, NextPcDisp, RsId, RsVal, RtId, RtVal, AluVal, MemVal) begin
         2'b00: disp_data   <= {PcDisp[7:0], NextPcDisp[7:0]};
         2'b01: disp_data   <= {RsId[7:0], RsVal[7:0]};
         2'b10: disp_data   <= {RtId[7:0], RtVal[7:0]};
-        2'b11: disp_data   <= {AluVal[7:0], MemVal[7:0]};
+        2'b11: disp_data   <= {MemVal[27:24], MemVal[19:16], MemVal[11:8], MemVal[3:0]};
         default: disp_data <= 0;
     endcase
 end

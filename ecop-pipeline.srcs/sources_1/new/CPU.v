@@ -18,7 +18,7 @@ module CPU(input Clk,
     assign RtId = rt;
     assign RtVal = rt_v;
     assign AluVal = alu_res;
-    assign MemVal = mem_v;
+    assign MemVal = data_peek;
 
     ////////// IF Stage //////////
     
@@ -45,8 +45,9 @@ module CPU(input Clk,
     PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
 
     wire [31:0] inst;
+    wire [31:0] inst_peek;
     
-    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst));
+    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst), .peek(inst_peek));
 
     ////////// ID stage //////////
 
@@ -206,8 +207,9 @@ module CPU(input Clk,
     
     wire [31:0] raw_mem_v;
     wire [31:0] mem_v;
+    wire [31:0] data_peek;
     
-    Memory #(.FILE("data.mem"), .SIZE(16)) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(raw_mem_v));
+    Memory #(.FILE("data.mem"), .SIZE(16)) mod_data_mem(.clk(Clk), .rw(mem_memRw), .addr(mem_alu_res), .din(mem_rt_v), .dout(raw_mem_v), .peek(data_peek));
     MemRotate mod_mem_rot(mem_memRot, raw_mem_v, mem_v);
 
     ////////// WB Stage //////////
