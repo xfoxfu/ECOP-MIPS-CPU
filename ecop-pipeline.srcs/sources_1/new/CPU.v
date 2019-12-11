@@ -13,7 +13,7 @@ module CPU(input Clk,
            output Clear);
     
     assign Pc = pc;
-    assign NextPc = next_pc;
+    assign NextPc = defer_next_pc;
     assign RsId = rs;
     assign RsVal = rs_v;
     assign RtId = rt;
@@ -26,22 +26,15 @@ module CPU(input Clk,
     
     wire [31:0] pc;
     wire [31:0] pc4;
-    wire [31:0] next_pc; // written by pcmux
-    wire [31:0] IF_epc;
-    wire [27:0] IF_jaddr;
-    wire [31:0] IF_immed_ext;
-    wire [2:0] IF_pc_src_sel;
-    wire IF_zf;
-    wire [31:0] IF_jr;
+    wire [31:0] defer_next_pc; // written by pcmux
     wire clear;
 
-    PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
-    PCMux mod_mux_pc(.PC4(pc4), .EPC(IF_epc), .J(IF_jaddr), .B(IF_immed_ext), .Jr(IF_jr), .Sw(IF_pc_src_sel), .Zf(IF_zf), .NextPC(next_pc), .Branched(clear));
+    PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(defer_next_pc));
 
     wire [31:0] inst;
     wire [31:0] inst_peek;
     
-    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst), .peek(inst_peek));
+    Memory #(.FILE("inst_sort.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst), .peek(inst_peek));
 
     ////////// ID stage //////////
 
@@ -115,6 +108,7 @@ module CPU(input Clk,
     reg [31:0] EX_alu_op;
     reg [31:0] EX_alu_opa_v;
     reg [31:0] EX_alu_opb_v;
+    reg [31:0] EX_rs_v;
     reg [31:0] EX_rt_v; // pass MEM
     reg [2:0] EX_pc_src_sel; // pass IF
     reg [27:0] EX_jaddr; // pass IF
@@ -143,6 +137,7 @@ module CPU(input Clk,
             EX_alu_op <= alu_op;
             EX_alu_opa_v <= alu_opa_v;
             EX_alu_opb_v <= alu_opb_v;
+            EX_rs_v <= rs_v;
             EX_rt_v <= rt_v; // pass MEM
             EX_pc_src_sel <= pc_src_sel; // pass IF
             EX_jaddr <= jaddr; // pass IF
@@ -163,12 +158,11 @@ module CPU(input Clk,
     
     ALU mod_alu(.aluop(EX_alu_op), .lhs(EX_alu_opa_v), .rhs(EX_alu_opb_v), .result(alu_res), .zero(zf), .sign(sf), .overflow(of));
 
-    assign IF_epc = EX_pc;
-    assign IF_jaddr = EX_jaddr;
-    assign IF_pc_src_sel = EX_pc_src_sel;
-    assign IF_zf = zf;
-    assign IF_jr = rs_v;
-    assign IF_immed_ext = EX_immed_ext;
+    wire [31:0] next_pc;
+
+    PCMux mod_mux_pc(.PC4(pc4), .EPC(EX_pc), .J(EX_jaddr), .B(EX_immed_ext), .Jr(EX_rs_v), .Sw(EX_pc_src_sel), .Zf(zf), .NextPC(next_pc), .Branched(clear));
+
+    assign defer_next_pc = next_pc;
 
     ////////// MEM Stage //////////
 
