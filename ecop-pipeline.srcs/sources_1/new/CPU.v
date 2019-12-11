@@ -32,17 +32,11 @@ module CPU(input Clk,
     wire if_zf;
     wire [31:0] if_jr;
 
-    always @(negedge Clk) begin
-        // if_pc <= (^ex_pc !== 1'bX) ? ex_pc : pc;
-        // if_pcSrc <= ex_pcSrc;
-        // if_zf <= zf;
-        // if_jr <= rs_v;
-        // if_jaddr <= ex_jaddr;
-        // if_immed_ext <= ex_immed_ext;
-    end
-    
     PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(next_pc));
     PCMux mod_mux_pc(.PC4(pc4), .EPC(if_epc), .J(if_jaddr), .B(if_immed_ext), .Jr(if_jr), .Sw(if_pcSrc), .Zf(if_zf), .NextPC(next_pc));
+
+    wire clear;
+    assign clear = next_pc != pc4;
 
     wire [31:0] inst;
     wire [31:0] inst_peek;
@@ -61,9 +55,15 @@ module CPU(input Clk,
     end
 
     always @(negedge Clk) begin
-        id_pc <= pc;
-        id_inst <= inst;
-        id_zf <= zf;
+        if (clear == 1) begin
+            id_pc <= -1;
+            id_inst <= 0;
+            id_zf <= 0;
+        end else begin
+            id_pc <= pc;
+            id_inst <= inst;
+            id_zf <= zf;
+        end
     end
     
     wire [5:0]  op;
@@ -123,23 +123,30 @@ module CPU(input Clk,
     end
 
     always @(negedge Clk) begin
-        ex_rs <= rs;
-        ex_rt <= rt;
-        ex_rd <= rd;
-        ex_sa <= sa;
-        ex_immed_ext <= immed_ext;
-        ex_aluOpA <= aluOpA;
-        ex_aluOpB <= aluOpB;
-        ex_aluOp <= aluOp;
-        ex_pcSrc <= pcSrc; // pass IF
-        ex_jaddr <= jaddr; // pass IF
-        ex_memRw <= memRw; // pass MEM
-        ex_memRot <= memRot; // pass MEM
-        ex_regWSrc <= regWSrc; // pass WB
-        ex_regWDst <= regWDst; // pass WB
-        ex_regWr <= regWr; // pass WB
-        ex_pc <= id_pc; // debug
-        ex_regWrDep <= regWrDep; // pass WB
+        if (clear == 0) begin
+            ex_rs <= rs;
+            ex_rt <= rt;
+            ex_rd <= rd;
+            ex_sa <= sa;
+            ex_immed_ext <= immed_ext;
+            ex_aluOpA <= aluOpA;
+            ex_aluOpB <= aluOpB;
+            ex_aluOp <= aluOp;
+            ex_pcSrc <= pcSrc; // pass IF
+            ex_jaddr <= jaddr; // pass IF
+            ex_memRw <= memRw; // pass MEM
+            ex_memRot <= memRot; // pass MEM
+            ex_regWSrc <= regWSrc; // pass WB
+            ex_regWDst <= regWDst; // pass WB
+            ex_regWr <= regWr; // pass WB
+            ex_pc <= id_pc; // debug
+            ex_regWrDep <= regWrDep; // pass WB
+        end else begin
+            ex_pc <= -1;
+            ex_pcSrc <= 0;
+            ex_memRw <= 0;
+            ex_regWr <= 0;
+        end
     end
     
     wire [4:0]  mux_reg_dst;
