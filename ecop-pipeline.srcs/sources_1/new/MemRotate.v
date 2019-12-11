@@ -7,8 +7,8 @@ module MemRotate(
 always @(*) begin
     case (RotTy)
         2'b00: RotV <= MemV;
-        2'b01: RotV <= {0, MemV[31:16]};
-        2'b10: RotV <= {0, MemV[31:24]};
+        2'b01: RotV <= {16'b0, MemV[31:16]};
+        2'b10: RotV <= {24'b0, MemV[31:24]};
         2'b11: RotV <= MemV; // unused
         default: RotV <= MemV;
     endcase

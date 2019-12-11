@@ -31,8 +31,8 @@ module Memory #(parameter AW = 32,
     assign dout[31:24] = data[addr];
     assign dout[23:16] = data[addr + 1];
     assign dout[15: 8] = data[addr + 2];
-    assign dout[7: 0]  = data[addr + 3];
-    
+    assign dout[ 7: 0] = data[addr + 3];
+
     always @(negedge clk) begin
         if (rw == 1'b1) begin
             data[addr]   <= din[31:24];

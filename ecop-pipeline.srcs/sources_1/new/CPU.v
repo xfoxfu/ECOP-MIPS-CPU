@@ -9,7 +9,8 @@ module CPU(input Clk,
            output [31:0] RtId,
            output [31:0] RtVal,
            output [31:0] AluVal,
-           output [31:0] MemVal);
+           output [31:0] MemVal,
+           output Clear);
     
     assign Pc = pc;
     assign NextPc = next_pc;
@@ -19,6 +20,7 @@ module CPU(input Clk,
     assign RtVal = rt_v;
     assign AluVal = alu_res;
     assign MemVal = data_peek;
+    assign Clear = clear;
 
     ////////// IF Stage //////////
     
@@ -50,6 +52,7 @@ module CPU(input Clk,
     initial begin
         id_pc <= 0;
         id_inst <= 0;
+        id_zf <= 0;
     end
 
     always @(negedge Clk) begin
@@ -115,9 +118,23 @@ module CPU(input Clk,
     reg [1:0] ex_regWrDep; // pass WB
 
     initial begin
-        ex_pc <= 0;
+        ex_rs <= 0;
+        ex_rt <= 0;
+        ex_rd <= 0;
+        ex_sa <= 0;
+        ex_immed_ext <= 0;
+        ex_aluOpA <= 0;
+        ex_aluOpB <= 0;
+        ex_aluOp <= 0;
+        ex_pcSrc <= 0;
+        ex_jaddr <= 0;
         ex_memRw <= 0;
+        ex_memRot <= 0;
+        ex_regWSrc <= 0;
+        ex_regWDst <= 0;
         ex_regWr <= 0;
+        ex_pc <= 0;
+        ex_regWrDep <= 0;
     end
 
     always @(negedge Clk) begin
@@ -158,7 +175,7 @@ module CPU(input Clk,
     wire [31:0] mux_alu_opa;
     wire [31:0] mux_alu_opb;
     
-    Mux2 mod_mux_alu_opa(.in0(rs_v), .in1({0, ex_sa}), .s(ex_aluOpA), .out(mux_alu_opa));
+    Mux2 mod_mux_alu_opa(.in0(rs_v), .in1({27'b0, ex_sa}), .s(ex_aluOpA), .out(mux_alu_opa));
     Mux2 mod_mux_alu_opb(.in0(rt_v), .in1(ex_immed_ext), .s(ex_aluOpB), .out(mux_alu_opb));
     
     wire [31:0] alu_res;
@@ -190,9 +207,18 @@ module CPU(input Clk,
     reg mem_of; // pass WB
 
     initial begin
+        mem_alu_res <= 0;
+        mem_rt_v <= 0;
         mem_memRw <= 0;
+        mem_memRot <= 0;
+        mem_regWSrc <= 0;
+        mem_regWDst <= 0;
         mem_regWr <= 0;
+        mem_rd <= 0;
+        mem_rt <= 0;
         mem_pc <= 0;
+        mem_regWrDep <= 0;
+        mem_of <= 0;
     end
 
     always @(negedge Clk) begin
@@ -233,8 +259,18 @@ module CPU(input Clk,
     reg wb_of;
 
     initial begin
+        wb_alu_res <= 0;
+        wb_mem_v <= 0;
+        wb_rt_v <= 0;
+        wb_regWSrc <= 0;
+        wb_regWDst <= 0;
         wb_regWr <= 0;
+        wb_rd <= 0;
+        wb_rt <= 0;
+        wb_pc <= 0;
+        wb_regWrDep <= 0;
         wb_yield_regWr <= 0;
+        wb_of <= 0;
     end
 
     always @(negedge Clk) begin

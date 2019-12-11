@@ -7,7 +7,7 @@ module PCMux(input [31:0] PC4,
              input [31:0] Jr,
              input [2:0] Sw,
              input Zf,
-             output reg [31:0] NextPC
+             output reg [31:0] NextPC,
              output reg        Branched);
 
 always @(*) begin

@@ -5,7 +5,8 @@ module Main(input [1:0] Sw,
             output reg [3:0] LedSw,
             input Rst,
             input ClkBtn,
-            input Clk);
+            input Clk,
+            output Clear);
 
 wire [31:0] PcDisp;
 wire [31:0] NextPcDisp;
@@ -17,11 +18,12 @@ wire [31:0] RtId;
 wire [31:0] RtVal;
 wire [31:0] AluVal;
 wire [31:0] MemVal;
+wire [31:0] MemData;
 wire cpu_clk;
 
 ButtonStabilizer stab(.Clk(Clk), .PushButton(ClkBtn), .ButtonState(cpu_clk));
 CPU cpu(.Clk(cpu_clk), .Reset(Rst), .Pc(Pc), .NextPc(NextPc), 
-    .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal));
+    .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal), .MemData(MemData), .Clear(Clear));
 
 assign PcDisp = Pc;
 assign NextPcDisp = NextPc;
@@ -62,7 +64,7 @@ always @(posedge disp_clk) begin
     endcase
 end
 
-always @(Sw, PcDisp, NextPcDisp, RsId, RsVal, RtId, RtVal, AluVal, MemVal) begin
+always @(Sw, PcDisp, NextPcDisp, RsId, RsVal, RtId, RtVal, AluVal, MemVal, MemData) begin
     case (Sw)
         2'b00: disp_data   <= {PcDisp[7:0], NextPcDisp[7:0]};
         2'b01: disp_data   <= {RsId[7:0], RsVal[7:0]};
