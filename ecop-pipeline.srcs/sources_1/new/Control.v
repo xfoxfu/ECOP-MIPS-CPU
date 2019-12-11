@@ -1,11 +1,10 @@
 `timescale 1ns / 1ps
 
 module Control
-    (op, funct, zf, InstMRw, ALUOpA, ALUOpB, ExtType, ALUOp, MemRw, RegWr, RegWDst, RegWSrc, PCSrc, RegWrDep, MemRot);
+    (op, funct, InstMRw, ALUOpA, ALUOpB, ExtType, ALUOp, MemRw, RegWr, RegWDst, RegWSrc, PCSrc, RegWrDep, MemRot);
 
     input      [5:0] op;
     input      [5:0] funct;
-    input            zf;
     output reg InstMRw;
     output reg ALUOpA;
     output reg ALUOpB;
