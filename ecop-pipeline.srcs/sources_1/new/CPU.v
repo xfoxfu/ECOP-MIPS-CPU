@@ -28,8 +28,10 @@ module CPU(input Clk,
     wire [31:0] pc4;
     wire [31:0] defer_next_pc; // written by pcmux
     wire clear;
+    wire defer_need_block; // written by ID
+    wire [31:0] defer_id_pc; // written by ID
 
-    PC mod_pc(.Clk(Clk), .Reset(Reset), .PC(pc), .PC4(pc4), .NextPC(defer_next_pc));
+    PC mod_pc(.Clk(Clk), .Reset(Reset), .Wr(!defer_need_block), .PC(pc), .PC4(pc4), .NextPC(defer_next_pc));
 
     wire [31:0] inst;
     wire [31:0] inst_peek;
@@ -50,7 +52,7 @@ module CPU(input Clk,
         if (clear == 1) begin
             ID_pc <= -1;
             ID_inst <= 0;
-        end else begin
+        end else if(need_block != 1) begin
             ID_pc <= pc;
             ID_inst <= inst;
         end
@@ -82,6 +84,24 @@ module CPU(input Clk,
     wire [1:0] mem_rot;
     
     Control mod_ctrl(op, funct, inst_mem_rw, alu_opa_sel, alu_opb_sel, ext_type, alu_op, mem_rw, reg_wr, reg_w_dst_sel, reg_w_src_sel, pc_src_sel, reg_wr_dep, mem_rot);
+
+    wire rs_used;
+    assign rs_used = alu_opa_sel == 1'b0;
+    wire rt_used;
+    assign rt_used = alu_opb_sel == 1'b0;
+    wire need_block;
+    assign need_block = (rs_used && 
+                            ((EX_reg_dst == rs && EX_reg_dst != 5'b00000 && EX_reg_wr == 1'b1) || 
+                             (MEM_reg_dst == rs && MEM_reg_dst != 5'b00000 && MEM_reg_wr == 1'b1) || 
+                             (WB_reg_dst == rs && WB_reg_dst != 5'b00000 && WB_reg_wr == 1'b1))
+                        ) ||
+                        (rt_used && 
+                            ((EX_reg_dst == rt && EX_reg_dst != 5'b00000 && EX_reg_wr == 1'b1) || 
+                             (MEM_reg_dst == rt && MEM_reg_dst != 5'b00000 && MEM_reg_wr == 1'b1) || 
+                             (WB_reg_dst == rt && WB_reg_dst != 5'b00000 && WB_reg_wr == 1'b1)));
+    
+    assign defer_need_block = need_block;
+    assign defer_id_pc = ID_pc;
 
     wire [31:0] immed_ext;
     Ext mod_ext(.imm(immed), .sign(ext_type), .extv(immed_ext));
@@ -128,7 +148,7 @@ module CPU(input Clk,
     end
 
     always @(negedge Clk) begin
-        if (clear == 1) begin
+        if (clear == 1 || need_block == 1) begin
             EX_mem_rw <= 0;
             EX_reg_wr <= 0;
             EX_pc <= -1;

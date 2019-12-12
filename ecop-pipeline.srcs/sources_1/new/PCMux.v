@@ -50,6 +50,10 @@ always @(*) begin
                     Branched <= 0;
             end
         end
+        3'b111: begin
+            NextPC <= PC4 - 8;
+            Branched <= 0;
+        end
         default: begin
             NextPC <= PC4; // not used
             Branched <= 0;

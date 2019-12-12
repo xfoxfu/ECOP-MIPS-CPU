@@ -4,6 +4,7 @@ module PC(
     input Clk,
     input Reset,
     input [31:0] NextPC,
+    input Wr,
     output [31:0] PC,
     output [31:0] PC4
     );
@@ -19,7 +20,7 @@ module PC(
 
     always @(negedge Clk) begin // or negedge Reset
         if(!Reset)
-            pc <= NextPC;
+            pc <= Wr ? NextPC : pc;
         else
             pc <= 0;
     end
