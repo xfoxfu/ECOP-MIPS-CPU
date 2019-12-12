@@ -36,7 +36,7 @@ module CPU(input Clk,
     wire [31:0] inst;
     wire [31:0] inst_peek;
     
-    Memory #(.FILE("inst_sort.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst), .peek(inst_peek));
+    Memory #(.FILE("inst.mem")) mod_inst_mem(.clk(Clk), .rw(0), .addr(pc), .din(0), .dout(inst), .peek(inst_peek));
 
     ////////// ID stage //////////
 
@@ -88,17 +88,18 @@ module CPU(input Clk,
     wire rs_used;
     assign rs_used = alu_opa_sel == 1'b0;
     wire rt_used;
-    assign rt_used = alu_opb_sel == 1'b0;
+    assign rt_used = alu_opb_sel == 1'b0 || mem_rw == 1'b1;
     wire need_block;
     assign need_block = (rs_used && 
                             ((EX_reg_dst == rs && EX_reg_dst != 5'b00000 && EX_reg_wr == 1'b1) || 
                              (MEM_reg_dst == rs && MEM_reg_dst != 5'b00000 && MEM_reg_wr == 1'b1) || 
                              (WB_reg_dst == rs && WB_reg_dst != 5'b00000 && WB_reg_wr == 1'b1))
-                        ) ||
-                        (rt_used && 
+                        ) || (rt_used && 
                             ((EX_reg_dst == rt && EX_reg_dst != 5'b00000 && EX_reg_wr == 1'b1) || 
                              (MEM_reg_dst == rt && MEM_reg_dst != 5'b00000 && MEM_reg_wr == 1'b1) || 
-                             (WB_reg_dst == rt && WB_reg_dst != 5'b00000 && WB_reg_wr == 1'b1)));
+                             (WB_reg_dst == rt && WB_reg_dst != 5'b00000 && WB_reg_wr == 1'b1))
+                        ) || (reg_wr == 1'b1 && reg_w_src_sel == 2'b01 &&
+                            (EX_mem_rw == 1'b1 || MEM_mem_rw == 1'b1));
     
     assign defer_need_block = need_block;
     assign defer_id_pc = ID_pc;
