@@ -15,17 +15,12 @@ module sim_cpu();
     
 
     initial begin
-        Clk <= 0;
-        Reset <= 1;
-        #2 Reset <= 0;
+        Clk <= 1; Reset <= 1;
+        #1 Clk <= 0;
+        #1 Reset <= 0;
         forever #1 Clk <= ~Clk;
     end
     
     CPU cpu(.Clk(Clk), .Reset(Reset), .Pc(Pc), .NextPc(NextPc), .RsId(RsId), .RsVal(RsVal), .RtId(RtId), .RtVal(RtVal), .AluVal(AluVal), .MemVal(MemVal));
 
-    always @(posedge Clk) begin
-        if (Pc == NextPc) 
-            $stop;
-    end
-    
 endmodule // sim_cpu

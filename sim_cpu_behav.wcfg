@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="53250000000fs"></ZoomStartTime>
-      <ZoomEndTime time="57750000001fs"></ZoomEndTime>
-      <Cursor1Time time="57000000000fs"></Cursor1Time>
+      <ZoomStartTime time="241627680000fs"></ZoomStartTime>
+      <ZoomEndTime time="252087680001fs"></ZoomEndTime>
+      <Cursor1Time time="242287680000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
-      <ValueColumnWidth column_width="138"></ValueColumnWidth>
+      <ValueColumnWidth column_width="134"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="20" />
+   <WVObjectSize size="16" />
    <wvobject fp_name="/sim_cpu/Clk" type="logic">
       <obj_property name="ElementShortName">Clk</obj_property>
       <obj_property name="ObjectShortName">Clk</obj_property>
@@ -28,41 +28,65 @@
       <obj_property name="ElementShortName">Reset</obj_property>
       <obj_property name="ObjectShortName">Reset</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/Pc" type="array">
-      <obj_property name="ElementShortName">Pc[31:0]</obj_property>
-      <obj_property name="ObjectShortName">Pc[31:0]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/pc" type="array">
+      <obj_property name="ElementShortName">pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">UNSIGNEDFIXEDPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">2</obj_property>
+      <obj_property name="radix_otherWidth">0</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/NextPc" type="array">
-      <obj_property name="ElementShortName">NextPc[31:0]</obj_property>
-      <obj_property name="ObjectShortName">NextPc[31:0]</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/inst" type="array">
+      <obj_property name="ElementShortName">inst[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inst[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/RsId" type="array">
-      <obj_property name="ElementShortName">RsId[31:0]</obj_property>
-      <obj_property name="ObjectShortName">RsId[31:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/id_pc" type="array">
+      <obj_property name="ElementShortName">id_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">id_pc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">UNSIGNEDFIXEDPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">2</obj_property>
+      <obj_property name="radix_otherWidth">0</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/RsVal" type="array">
-      <obj_property name="ElementShortName">RsVal[31:0]</obj_property>
-      <obj_property name="ObjectShortName">RsVal[31:0]</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/ex_pc" type="array">
+      <obj_property name="ElementShortName">ex_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ex_pc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">UNSIGNEDFIXEDPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">2</obj_property>
+      <obj_property name="radix_otherWidth">0</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/RtId" type="array">
-      <obj_property name="ElementShortName">RtId[31:0]</obj_property>
-      <obj_property name="ObjectShortName">RtId[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/mod_alu/lhs" type="array">
+      <obj_property name="ElementShortName">lhs[31:0]</obj_property>
+      <obj_property name="ObjectShortName">lhs[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/RtVal" type="array">
-      <obj_property name="ElementShortName">RtVal[31:0]</obj_property>
-      <obj_property name="ObjectShortName">RtVal[31:0]</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/mod_alu/rhs" type="array">
+      <obj_property name="ElementShortName">rhs[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rhs[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/AluVal" type="array">
-      <obj_property name="ElementShortName">AluVal[31:0]</obj_property>
-      <obj_property name="ObjectShortName">AluVal[31:0]</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/mod_alu/result" type="array">
+      <obj_property name="ElementShortName">result[31:0]</obj_property>
+      <obj_property name="ObjectShortName">result[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/MemVal" type="array">
-      <obj_property name="ElementShortName">MemVal[31:0]</obj_property>
-      <obj_property name="ObjectShortName">MemVal[31:0]</obj_property>
+   <wvobject fp_name="/sim_cpu/cpu/mem_pc" type="array">
+      <obj_property name="ElementShortName">mem_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">mem_pc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">UNSIGNEDFIXEDPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">2</obj_property>
+      <obj_property name="radix_otherWidth">0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/sim_cpu/cpu/wb_pc" type="array">
+      <obj_property name="ElementShortName">wb_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">wb_pc[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">UNSIGNEDFIXEDPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">2</obj_property>
+      <obj_property name="radix_otherWidth">0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/sim_cpu/cpu/next_pc" type="array">
+      <obj_property name="ElementShortName">next_pc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_pc[31:0]</obj_property>
    </wvobject>
    <wvobject fp_name="group180" type="group">
       <obj_property name="label">Control</obj_property>
@@ -109,38 +133,18 @@
          <obj_property name="ElementShortName">RegWr</obj_property>
          <obj_property name="ObjectShortName">RegWr</obj_property>
       </wvobject>
-      <wvobject fp_name="/sim_cpu/cpu/mod_ctrl/RegWDst" type="logic">
-         <obj_property name="ElementShortName">RegWDst</obj_property>
-         <obj_property name="ObjectShortName">RegWDst</obj_property>
+      <wvobject fp_name="/sim_cpu/cpu/mod_ctrl/RegWDst" type="array">
+         <obj_property name="ElementShortName">RegWDst[1:0]</obj_property>
+         <obj_property name="ObjectShortName">RegWDst[1:0]</obj_property>
       </wvobject>
-      <wvobject fp_name="/sim_cpu/cpu/mod_ctrl/RegWSrc" type="logic">
-         <obj_property name="ElementShortName">RegWSrc</obj_property>
-         <obj_property name="ObjectShortName">RegWSrc</obj_property>
+      <wvobject fp_name="/sim_cpu/cpu/mod_ctrl/RegWSrc" type="array">
+         <obj_property name="ElementShortName">RegWSrc[1:0]</obj_property>
+         <obj_property name="ObjectShortName">RegWSrc[1:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/sim_cpu/cpu/mod_ctrl/PCSrc" type="array">
-         <obj_property name="ElementShortName">PCSrc[1:0]</obj_property>
-         <obj_property name="ObjectShortName">PCSrc[1:0]</obj_property>
+         <obj_property name="ElementShortName">PCSrc[2:0]</obj_property>
+         <obj_property name="ObjectShortName">PCSrc[2:0]</obj_property>
       </wvobject>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/rw" type="logic">
-      <obj_property name="ElementShortName">rw</obj_property>
-      <obj_property name="ObjectShortName">rw</obj_property>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/din" type="array">
-      <obj_property name="ElementShortName">din[31:0]</obj_property>
-      <obj_property name="ObjectShortName">din[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/dout" type="array">
-      <obj_property name="ElementShortName">dout[31:0]</obj_property>
-      <obj_property name="ObjectShortName">dout[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/addr" type="array">
-      <obj_property name="ElementShortName">addr[31:0]</obj_property>
-      <obj_property name="ObjectShortName">addr[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mem_v" type="array">
-      <obj_property name="ElementShortName">mem_v[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mem_v[31:0]</obj_property>
    </wvobject>
    <wvobject fp_name="vbus44" type="vbus">
       <obj_property name="label">Memory</obj_property>
@@ -162,13 +166,25 @@
          <obj_property name="ObjectShortName">[3][7:0]</obj_property>
       </wvobject>
    </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_rs/wr" type="logic">
-      <obj_property name="ElementShortName">wr</obj_property>
-      <obj_property name="ObjectShortName">wr</obj_property>
-   </wvobject>
-   <wvobject fp_name="/sim_cpu/cpu/mod_rs/reset" type="logic">
-      <obj_property name="ElementShortName">reset</obj_property>
-      <obj_property name="ObjectShortName">reset</obj_property>
+   <wvobject fp_name="vbus222" type="vbus">
+      <obj_property name="label">Memory</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/data[8]" type="array">
+         <obj_property name="ElementShortName">[8][7:0]</obj_property>
+         <obj_property name="ObjectShortName">[8][7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/data[9]" type="array">
+         <obj_property name="ElementShortName">[9][7:0]</obj_property>
+         <obj_property name="ObjectShortName">[9][7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/data[10]" type="array">
+         <obj_property name="ElementShortName">[10][7:0]</obj_property>
+         <obj_property name="ObjectShortName">[10][7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/sim_cpu/cpu/mod_data_mem/data[11]" type="array">
+         <obj_property name="ElementShortName">[11][7:0]</obj_property>
+         <obj_property name="ObjectShortName">[11][7:0]</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject fp_name="group36" type="group">
       <obj_property name="label">Reg</obj_property>
@@ -215,6 +231,10 @@
          <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
          <obj_property name="CustomSignalColor">#FFFF00</obj_property>
          <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject fp_name="/sim_cpu/cpu/mod_rs/rstack[31]" type="array">
+         <obj_property name="ElementShortName">[31][31:0]</obj_property>
+         <obj_property name="ObjectShortName">[31][31:0]</obj_property>
       </wvobject>
    </wvobject>
 </wave_config>
