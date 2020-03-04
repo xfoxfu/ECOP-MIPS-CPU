@@ -1,6 +1,6 @@
-# ECOP Single Cycle CPU
+# ECOP Pipelined CPU
 
-Single cycle CPU with a subset of MIPS ISA. Ready to be programmed on a Basys3 board.
+Pipelined CPU with a subset of MIPS ISA. Ready to be programmed on a Basys3 board.
 
 ## License
 
